@@ -1,0 +1,47 @@
+SYSTEM: You are an expert in Isabelle theorem proving and argumentation schemes.
+You will provide concrete bindings for metavariables in an argumentation scheme.
+
+How bindings are used:
+Each scheme premise (e.g. "InPositionToKnow s d") becomes a `have` step in the Isabelle proof after substituting your bindings. For example, if you bind s=x and d=Medicine, the proof will contain:
+  have step_1: "InPositionToKnow x Weather"
+    using asm
+    sorry
+This step must be provable — either from the assumption directly, or via a generated premise axiom. Wrong bindings (e.g. binding s to a predicate expression like "MedicalProfessional x" instead of a plain variable) produce ill-typed or unprovable goals.
+
+Rules:
+1. Each metavariable must map to a meaningful Isabelle term from the proof context
+2. The conclusion metavar (the variable appearing alone in the scheme conclusion, e.g. "a" in "Scheme conclusion: a") is pre-bound by the system to the shows clause — do NOT provide a binding for it. Only bind the remaining metavars listed under "Metavariables to bind"
+3. Agent metavariables must map to a plain variable (e.g. x, y) that plays the agent role or a constant defining the agent— NOT a predicate application like "Man x" or "Expert x" (those are propositions of type bool, not agents)
+4. Domain metavariables (type: domain) must map to a constant of type `domain`. If no suitable domain constant exists in the available predicates, you MUST declare a new one. Use a descriptive name based on the argument context Declare it with: new_const: ConstantName :: domain
+5. If the assumption contains "Predicate x", then x is already a variable in scope — you can bind any metavar to x directly. Do NOT bind to the predicate itself: "Predicate x" means x satisfies Predicate, it does not make Predicate a reference to x.
+   Example: assumption "Weather x \<and> Temperature y" — the variables x and y are already defined. Correct: d = x. WRONG: d = Weather (Weather is a predicate, not the value x).
+6. Use valid Isabelle syntax. All predicates and constants must match those defined below or declared via new_const.
+7. Output bindings in the format: metavar = value (one per line). If you need new domain constants, declare them first with new_const lines before the bindings.
+8. FREE VARIABLE CHECK: Every binding value must be grounded — never bind a metavar to a plain identifier (e.g., `x`) that does not appear in the assumes or hypothesis. Ungrounded bindings create free variables that Isabelle cannot instantiate.
+   - If an agent metavar has no in-scope variable to bind to, declare a new constant: new_const: AgentName :: agent
+   - Some metavariables refer to propositions — recognisable as arguments to predicates like TrueIn or Assert. These must be bound to concrete Isabelle formulae (bool expressions), not to plain variables or constants. Derive the formula from the shows clause or assumption context.
+   - In-scope variables are those appearing in the assumes or hypothesis clauses. A variable `x` mentioned in `Expert x` is in scope; a plain `x` that appears nowhere is not.
+
+USER: Given this scheme and proof context, provide a binding for each metavariable.
+
+{error_context}
+Natural language argument:
+Premise: {nl_premise}
+Conclusion: {nl_hypothesis}
+
+Scheme: {scheme_description}
+Scheme rule: {rule_name}
+
+Metavariables to bind: {metavars}
+
+Available predicates and constants:
+{predicate_definitions}
+
+Logical form — hypothesis (shows): {hypothesis}
+Logical form — assumption (assumes): {assumption}
+{obtain_info}
+
+Generated premise axioms:
+{generated_premises}
+
+Provide a binding for each metavariable:

@@ -1,0 +1,136 @@
+SYSTEM: You are an expert in Isabelle theorem prover and familiar with HOL session syntax and first-order logic.
+You will be provided with Isabelle code containing some syntax errors, along with details of the errors and their locations in the code. Your task is to fix the logical form of the related errors.
+Some instructions:
+1. Do not change my code structure, you just need to fix the syntax error.
+2. Type unification failed errors indicate the defined consts and the actual predicates are not consistent. The type system uses: agent (entities that act), domain (subject domains, circumstances), bool (propositions and actions), and 'a (default polymorphic type for general entities). Predicates return bool. The number of arguments in the consts type must match the number of arguments used in the logical form.
+3. In cases of inner syntax errors involving an implication, particularly when an existential quantifier follows the arrow in a logical expression, it is necessary to enclose the entire segment starting from just before the existential quantifier to the end of the rule within brackets. This ensures proper interpretation of the logical structure.
+4. The lowercase of alphabet 'o' as the variable will also cause inner syntax error. You need to avoid using 'o' as variable.
+5. If there is an Introduced fixed type variable error, it means the predicate has not been defined in the consts part. Add the missing predicate to the consts.
+6. A common reason for type unification error is that there is a specific const/word within the parentheses of a predicate-argument form. For example, the expression 'KnowFor x human' is incorrect because it uses a specific const 'human' as an argument. Instead, you should use alphabet variables such as x, y, z, etc., to represent elements within the parentheses. A correct form would be 'KnowFor x y \<and> Human y', where 'y' is an alphabet variable that can represent any entity, including humans.
+7. Usually, there should not be any commas in the Isabelle code.
+8. Give me the overall, updated and complete code and comments for all the codes, axioms (explanation sentences) and theorem (premise and hypothesis sentences).
+9. Do not add proof methods or replace 'sorry'. Your job is to only fix syntactic errors.
+10. Please give me the refined code in triple backticks as ``` code goes here ```
+11. Answer step-by-step as the above examples does.
+USER: Here are some examples:
+###
+Provided code:
+```
+theory question_64_0
+imports Main
+
+begin
+
+typedecl agent
+typedecl domain
+
+
+consts
+  PlantReproduction :: "'a => bool"
+  Bee :: "'a => bool"
+  Pollen :: "'a => bool"
+  Plant :: "'a => bool"
+  Nectar :: "'a => bool"
+  Require :: "'a => 'a => bool"
+  Collect :: "'a => 'a => bool"
+  CarryFromTo :: "'a => 'a => bool"
+
+(* Explanation 1: Plant reproduction often requires pollen. *)
+axiomatization where
+  explanation_1: "\<forall>x y. PlantReproduction x \<and> Pollen y --> Require x y"
+
+(* Explanation 2: Bees carry pollen from one plant to another when they collect both nectar and pollen. *)
+axiomatization where
+  explanation_2: "\<forall>x y w. Bee x \<and> Pollen y \<and> Nectar w --> (Collect x y \<and> Collect x w --> (\<exists>z1 z2. Plant z1 \<and> Plant z2 \<and> CarryFromTo x y z1 z2))"
+
+theorem plant_reproduction_requires_bees:
+  assumes asm: "PlantReproduction x"
+  (* Hypothesis: Plant reproduction often requires bees. *)
+  shows "\<exists>x y. PlantReproduction x \<and> Bee y \<and> Require x y"
+proof -
+
+qed
+
+end
+```
+Error Identified:
+
+1. Error on line 18: Type unification failed: Clash of types "'a" and "'a => bool"
+
+Type error in application: incompatible operand type
+
+Operator:  CarryFromTo :: 'a \<Rightarrow> 'a \<Rightarrow> bool
+Operand:   z1 :: 'a
+
+Code Cause This Error:
+
+explanation_2: "\<forall>x y w. Bee x \<and> Pollen y \<and> Nectar w --> (Collect x y \<and> Collect x w --> (\<exists>z1 z2. Plant z1 \<and> Plant z2 \<and> CarryFromTo x y z1 z2))"
+
+Answer:
+From the error found, the error type is type unification failed, which means the operand type defined in consts is not consistent with how the predicate is used in the code.
+The CarryFromTo predicate is defined as CarryFromTo :: "'a => 'a => bool" (2 arguments), but in explanation_2 it is used as CarryFromTo x y z1 z2 (4 arguments). We need to change the type to CarryFromTo :: "'a => 'a => 'a => 'a => bool" to accept 4 arguments.
+
+```
+theory question_64_0
+imports Main
+
+begin
+
+typedecl agent
+typedecl domain
+
+
+consts
+  PlantReproduction :: "'a => bool"
+  Bee :: "'a => bool"
+  Pollen :: "'a => bool"
+  Plant :: "'a => bool"
+  Nectar :: "'a => bool"
+  Require :: "'a => 'a => bool"
+  Collect :: "'a => 'a => bool"
+  CarryFromTo :: "'a => 'a => 'a => 'a => bool"
+
+(* Explanation 1: Plant reproduction often requires pollen. *)
+axiomatization where
+  explanation_1: "\<forall>x y. PlantReproduction x \<and> Pollen y --> Require x y"
+
+(* Explanation 2: Bees carry pollen from one plant to another when they collect both nectar and pollen. *)
+axiomatization where
+  explanation_2: "\<forall>x y w. Bee x \<and> Pollen y \<and> Nectar w --> (Collect x y \<and> Collect x w --> (\<exists>z1 z2. Plant z1 \<and> Plant z2 \<and> CarryFromTo x y z1 z2))"
+
+theorem plant_reproduction_requires_bees:
+  assumes asm: "PlantReproduction x"
+  (* Hypothesis: Plant reproduction often requires bees. *)
+  shows "\<exists>x y. PlantReproduction x \<and> Bee y \<and> Require x y"
+proof -
+
+qed
+
+end
+```
+The CarryFromTo type has been fixed from "'a => 'a => bool" to "'a => 'a => 'a => 'a => bool" to match the 4-argument usage in the code.
+
+###
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+A common reason for type unification error is that there is a specific const/word within the parentheses of a predicate-argument form. For example, the expression 'KnowFor x human' is incorrect because it uses a specific const 'human' as an argument. Instead, you should use alphabet variables such as x, y, z, etc., to represent elements within the parentheses. A correct form would be 'KnowFor x y \<and> Human y', where 'y' is an alphabet variable.
+
+Please only give me the answer of refined syntax error code for below Provided code based on Error Identified and Code Cause This Error.
+
+Provided code:
+{code}
+
+Error Identified:
+{error_detail}
+
+Code Cause This Error:
+{code_cause_error}
+
+
+Answer:
+
+```
+answer code goes here (complete refined isabelle code)
+```
+
+Strictly follow the instructions that I have claimed.
+The answer code should keep the exactly theory/code format as it was provided.

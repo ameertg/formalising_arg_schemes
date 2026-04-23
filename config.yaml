@@ -1,0 +1,367 @@
+isabelle:
+  master_dir: '/home/asaadaty/LLMProver/formalisation/isabelle'
+  app_dir: '/home/asaadaty/Isabelle2025-2/bin'
+  # When true, keeps the deterministic apply-style proof instead of LLM-generated proofs
+  skip_llm_proof: false
+
+gpt-3.5-turbo:
+  engine: gpt-3.5-turbo
+  api_key: your_api
+
+gpt-4o:
+  engine: gpt-4o
+  api_key: your_api
+
+gpt-4o-mini:
+  engine: gpt-4o-mini
+  api_key: your_api
+
+huggingface:
+  api_key: your_api
+
+# Local models using HuggingFace Transformers
+# These run directly on your MacBook Pro without API calls
+local-qwen-3b:
+  model_id: Qwen/Qwen2.5-3B-Instruct
+  device: mps  # 'mps' for Apple Silicon, 'cpu' for Intel Mac, 'cuda' for Nvidia GPU
+  type: local
+
+local-qwen-1.5b:
+  model_id: Qwen/Qwen2.5-1.5B-Instruct
+  device: mps
+  type: local
+
+local-phi-3:
+  model_id: microsoft/Phi-3-mini-4k-instruct
+  device: mps
+  type: local
+
+local-gemma-2b:
+  model_id: google/gemma-2-2b-it
+  device: mps
+  type: local
+
+walton_argumentation_schemes:
+  enabled: true
+
+  # Walton schemes - names match dataset 'argumentation_scheme' field
+  schemes:
+  - name: "expert opinion"
+    rule_name: "expert_opinion"
+    description: "Expert E asserts proposition A is true/false"
+    consts:
+      Expert:
+        type: "agent => domain => bool"
+        definition: "Expert(e, d) means agent e is an expert in domain d"
+      Asserts:
+        type: "agent => bool => bool"
+        definition: "Asserts(e, a) means agent e asserts proposition a"
+      PropositionInDomain:
+        type: "bool => domain => bool"
+        definition: "PropositionInDomain(a, d) means proposition a is within domain d"
+    isabelle_axiom: |
+      axiomatization where
+        expert_opinion: "[| Expert e d; PropositionInDomain a d; Asserts e a |] ==> a"
+
+  - name: "position to know"
+    rule_name: "position_to_know"
+    description: "Source S is in position to know about domain D; S asserts A about D"
+    consts:
+      InPositionToKnow:
+        type: "agent => domain => bool"
+        definition: "InPositionToKnow(s, d) means agent s is in a position to know about domain d"
+      Asserts:
+        type: "agent => bool => bool"
+        definition: "Asserts(s, a) means agent s asserts proposition a"
+      PropositionInDomain:
+        type: "bool => domain => bool"
+        definition: "PropositionInDomain(a, d) means proposition a is within domain d"
+    isabelle_axiom: |
+      axiomatization where
+        position_to_know: "[| InPositionToKnow s d; PropositionInDomain a d; Asserts s a |] ==> a"
+
+  - name: "cause to effect"
+    rule_name: "cause_to_effect"
+    description: "If cause C occurs, then effect E will occur"
+    consts:
+      Causes:
+        type: "'a => 'a => bool"
+        definition: "Causes(c, e) means c causes effect e"
+    isabelle_axiom: |
+      axiomatization where
+        cause_to_effect: "[| Causes c e; c |] ==> e"
+
+  - name: "analogy"
+    rule_name: "analogy"
+    description: "Case C1 is similar to case C2; A is true in C1"
+    consts:
+      SimilarTo:
+        type: "domain => domain => bool"
+        definition: "SimilarTo(c1, c2) means case c1 is similar to case c2"
+      TrueIn:
+        type: "bool => domain => bool"
+        definition: "TrueIn(a, c) means proposition a is true in case c"
+    isabelle_axiom: |
+      axiomatization where
+        analogy: "[| SimilarTo c1 c2; TrueIn a c1 |] ==> TrueIn a c2"
+
+  - name: "established rule"
+    rule_name: "established_rule"
+    description: "Rule R applies; case C falls under R"
+    consts:
+      EstablishedRuleFor:
+        type: "bool => agent => bool"
+        definition: "EstablishedRuleFor(a, x) means action a (as a boolean proposition) is an established rule for agent x"
+      Exception:
+        type: "agent => bool => bool"
+        definition: "Exception(x, a) means agent x is an exception to action a"
+      MustCarryOut:
+        type: "agent => bool => bool"
+        definition: "MustCarryOut(x, a) means agent x must carry out action a"
+    isabelle_axiom: |
+      axiomatization where
+        established_rule: "[| EstablishedRuleFor a x; \<not> Exception x a |] ==> MustCarryOut x a"
+
+  - name: "popular opinion"
+    rule_name: "popular_opinion"
+    description: "Most people believe A is true"
+    consts:
+      PopularlyBelieved:
+        type: "bool => bool"
+        definition: "PopularlyBelieved(a) means proposition a is popularly believed"
+    isabelle_axiom: |
+      axiomatization where
+        popular_opinion: "PopularlyBelieved a ==> a"
+
+  - name: "popular practice"
+    rule_name: "popular_practice"
+    description: "Most people do action A"
+    consts:
+      AcceptableAction:
+        type: "bool => bool"
+        definition: "AcceptableAction(a) means action a (as a boolean proposition) is acceptable"
+      PopularlyPracticedBy:
+        type: "bool => agent => bool"
+        definition: "PopularlyPracticedBy(a, x) means action a is popularly practiced by agent x"
+    isabelle_axiom: |
+      axiomatization where
+        popular_practice: "PopularlyPracticedBy a x ==> AcceptableAction a"
+
+  - name: "verbal classification"
+    rule_name: "verbal_classification"
+    description: "X has property F; things with F are classified as G"
+    consts:
+      HasProperty:
+        type: "'a => 'b => bool"
+        definition: "HasProperty(x, f) means x has property f, where f is a property identifier constant of type 'b"
+      ClassifiedAs:
+        type: "'a => 'b => bool"
+        definition: "ClassifiedAs(x, g) means x is classified as g, where g is a category constant of type 'b"
+    isabelle_axiom: |
+      axiomatization where
+        verbal_classification: "[| HasProperty x f; \<forall>y. HasProperty y f --> ClassifiedAs y g |] ==> ClassifiedAs x g"
+
+  - name: "precedent"
+    rule_name: "precedent"
+    description: "Generally, if x has property F then x has property G (established rule); in this legitimate case, a has F but not G; therefore an exception must be recognised and the rule appropriately modified or qualified"
+    consts:
+      EstablishedRule:
+        type: "'b => 'b => bool"
+        definition: "EstablishedRule(f, g) means it is an established rule that anything with property f also has property g"
+      LegitimateCase:
+        type: "'a => bool"
+        definition: "LegitimateCase(a) means a is a legitimate case under consideration"
+      HasProperty:
+        type: "'a => 'b => bool"
+        definition: "HasProperty(a, f) means individual a has property f"
+      ExceptionToRule:
+        type: "'a => 'b => 'b => bool"
+        definition: "ExceptionToRule(a, f, g) means a is an exception to the established rule relating f and g"
+      Recognised:
+        type: "'a => 'b => 'b => bool"
+        definition: "Recognised(a, f, g) means the exception for a with respect to f and g is recognised"
+      AppropriatelyModified:
+        type: "('a => bool) => ('a => bool) => bool"
+        definition: "AppropriatelyModified(f, g) means the rule relating f and g has been appropriately modified"
+    isabelle_axiom: |
+      axiomatization where
+        precedent: "[| EstablishedRule f g; LegitimateCase a; HasProperty a f; \<not> HasProperty a g |] ==> (ExceptionToRule a f g \<and> (Recognised a f g \<or> AppropriatelyModified f g))"
+
+  - name: "slippery slope"
+    rule_name: "slippery_slope"
+    description: "Action A leads to consequence B which leads to undesirable C"
+    consts:
+      LeadsTo:
+        type: "'a => 'a => bool"
+        definition: "LeadsTo(a, b) means taking action/accepting a causally leads to outcome b; both arguments have the same type so chains like LeadsTo a b and LeadsTo b c are well-typed"
+      Undesirable:
+        type: "'a => bool"
+        definition: "a classifier for undesirable outcomes"
+      AcceptableAction:
+        type: "'a => bool"
+        definition: "a classifier for unacceptable/prohibited actions"
+    isabelle_axiom: |
+      axiomatization where
+        slippery_slope: "[| LeadsTo a b; LeadsTo b c; Undesirable c |] ==> \<not> AcceptableAction a"
+
+  - name: "inconsistent commitment"
+    rule_name: "inconsistent_commitment"
+    description: "Person P is committed to A but also to not-A"
+    consts:
+      CommittedTo:
+        type: "agent => bool => bool"
+        definition: "CommittedTo(p, a) means agent p is committed to proposition a"
+      InconsistentCommitments:
+        type: "agent => bool"
+        definition: "InconsistentCommitments(p) means agent p holds inconsistent commitments"
+    isabelle_axiom: |
+      axiomatization where
+        inconsistent_commitment: "[| CommittedTo p a; CommittedTo p (\<not>a) |] ==> InconsistentCommitments p"
+
+  - name: "best explanation"
+    rule_name: "best_explanation"
+    description: "E is a satisfactory explanation of finding F; no alternative explanation is as satisfactory"
+    consts:
+      Finding:
+        type: "bool => bool"
+        definition: "Finding(f) means f is an observed finding or given set of facts"
+      Explains:
+        type: "bool => bool => bool"
+        definition: "Explains(h, f) means hypothesis h adequately explains finding f; this is a boolean predicate — use it directly without numeric comparisons"
+      BestExplains:
+        type: "bool => bool => bool"
+        definition: "BestExplains(h, f) means h is the best available explanation for f — no other hypothesis explains f as well or better"
+    isabelle_axiom: |
+      axiomatization where
+        best_explanation: "[| Finding f; Explains h f; BestExplains h f |] ==> h"
+
+  - name: "direct ad hominem"
+    rule_name: "direct_ad_hominem"
+    description: "Agent A has bad character; A's argument should not be accepted"
+    consts:
+      BadCharacter:
+        type: "agent => bool"
+        definition: "BadCharacter(a) means agent a is a person of bad or defective character"
+      ArguesFor:
+        type: "agent => bool => bool"
+        definition: "ArguesFor(a, p) means agent a puts forward argument p"
+      Undermined:
+        type: "bool => bool"
+        definition: "Undermined(p) means argument p should not be accepted"
+    isabelle_axiom: |
+      axiomatization where
+        direct_ad_hominem: "[| BadCharacter a; ArguesFor a p |] ==> Undermined p"
+
+  - name: "example"
+    rule_name: "example"
+    description: "Individual instance I has property P; I is an example supporting general claim G"
+    consts:
+      IsExampleOf:
+        type: "bool => bool => bool"
+        definition: "IsExampleOf(i, g) means instance i is an example supporting general claim g"
+    isabelle_axiom: |
+      axiomatization where
+        example: "[| IsExampleOf i g; i |] ==> g"
+
+  - name: "ignorance"
+    rule_name: "ignorance"
+    description: "If A were true it would be known; A is not known; therefore A is false"
+    consts:
+      KnownTrue:
+        type: "bool => bool"
+        definition: "KnownTrue(a) means proposition a is known to be true"
+    isabelle_axiom: |
+      axiomatization where
+        ignorance: "[| a --> KnownTrue a; \<not> KnownTrue a |] ==> \<not> a"
+
+  - name: "sign"
+    rule_name: "sign"
+    description: "Sign A is present; B is generally indicated when sign A is true"
+    consts:
+      SignOf:
+        type: "bool => bool => bool"
+        definition: "SignOf(a, b) means a is a sign that generally indicates b"
+    isabelle_axiom: |
+      axiomatization where
+        sign: "[| SignOf a b; a |] ==> b"
+
+  - name: "sunk costs"
+    rule_name: "sunk_costs"
+    description: "At t1 agent committed to action A; at t2 there is a choice between A and not-A; the pre-commitment persists; therefore choose A"
+    consts:
+      PreCommittedTo:
+        type: "agent => bool => bool"
+        definition: "PreCommittedTo(x, a) means agent x is pre-committed to action a (from prior actions or commitments at t1)"
+      ChoiceBetween:
+        type: "bool => bool => bool"
+        definition: "ChoiceBetween(a, b) means there is a current choice between a and b"
+      ShouldChoose:
+        type: "agent => bool => bool"
+        definition: "ShouldChoose(x, a) means agent x should choose action a"
+    isabelle_axiom: |
+      axiomatization where
+        sunk_costs: "[| ChoiceBetween a (\<not>a); PreCommittedTo x a |] ==> ShouldChoose x a"
+
+  - name: "threat"
+    rule_name: "threat"
+    description: "Agent A threatens bad consequence B unless X is done; A can bring about B; therefore X should be done"
+    consts:
+      CanBringAbout:
+        type: "agent => bool => bool"
+        definition: "CanBringAbout(a, b) means agent a is in a position to bring about b"
+      WillBringAbout:
+        type: "agent => bool => bool => bool"
+        definition: "WillBringAbout(a, b, x) means agent a asserts they will bring about b if x is not done"
+      Undesirable:
+        type: "bool => bool"
+        definition: "Undesirable(b) means consequence b is undesirable"
+      ShouldDo:
+        type: "bool => bool"
+        definition: "ShouldDo(x) means action x should be done"
+    isabelle_axiom: |
+      axiomatization where
+        threat: "[| CanBringAbout a b; WillBringAbout a b x; Undesirable b |] ==> ShouldDo x"
+
+  - name: "waste"
+    rule_name: "waste"
+    description: "If a stops trying to realise p then all previous efforts to realize p will be wasted; If all a's attempts to realize p were wasted that would be a bad thing; therefore a should continue to realize p"
+    consts:
+      WastedPreviousEffort:
+        type: "agent => 'a => bool"
+        definition: "WastedPreviousEffort(a, p) means agent a's previous efforts to realise p are wasted"
+      Stop:
+        type: "agent => 'a => bool"
+        definition: "Stop(a, p) means that agent a stops doing p"
+      Bad:
+        type: "bool => bool"
+        definition: "Bad(p) means the situation described by proposition p is bad"
+      ShouldDo:
+        type: "agent => 'a => bool"
+        definition: "ShouldDo(a, p) means agent a should try to realise situation p"
+    isabelle_axiom: |
+      axiomatization where
+        waste: "[| Stop a p --> WastedPreviousEffort a p; Bad (WastedPreviousEffort a p) |] ==> ShouldDo a p"
+
+  - name: "witness testimony"
+    rule_name: "witness_testimony"
+    description: "Witness W is in position to know A; W is telling the truth; W states A; therefore A"
+    consts:
+      PositionToKnow:
+        type: "agent => bool => bool"
+        definition: "PositionToKnow(w, a) means witness w is in a position to know whether a is true"
+      TruthTelling:
+        type: "agent => bool"
+        definition: "TruthTelling(w) means witness w is telling the truth as they know it"
+      Testifies:
+        type: "agent => bool => bool"
+        definition: "Testifies(w, a) means witness w states that a is true"
+    isabelle_axiom: |
+      axiomatization where
+        witness_testimony: "[| PositionToKnow w a; TruthTelling w; Testifies w a |] ==> a"
+
+  # Dynamic trial-and-error settings
+  trial_settings:
+    enabled: false  # Will be enabled in phase 2
+    max_schemes_per_proof: 3
+    trial_order: "sequential"  # Try one scheme at a time
+    backtrack_on_failure: true

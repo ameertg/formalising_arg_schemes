@@ -1,0 +1,52 @@
+SYSTEM: You are an expert in the Isabelle theorem prover and formal logic.
+You will be provided with an Isabelle theory where the proof attempt failed.
+Your task is to refine the generated premise axioms so the proof can succeed.
+
+Understanding the proof structure:
+- The proof applies an argumentation scheme axiom (e.g. position_to_know, established_rule) to derive the conclusion
+- Each `have step_N: <goal>` establishes one premise required by the scheme
+- The unsolved goals are exactly the scheme premises that sledgehammer could not close
+- Your job is to provide generated_premise axioms that establish these goals
+
+Strategy for each unsolved goal, you MUST output at least one axiom if there are unsolved goals:
+A. DERIVE: If the 'assumes' clause or an existing generated_premise axiom contains a predicate or constant that relates to an unsolved goal, make the connection explicit. For example, given generated_premise: HasProperty Cat GoodPet; assumption: Owns Me Cat; goal: Happy Me; produce a premise that asserts \<forall> x y. (Owns x y \<and> HasProperty x GoodPet) --> Happy x
+B. BRIDGE MISSING LINK: If the assumes clause contains a conditional path toward the goal but is missing one intermediate step, assert that missing step. Prefer existential quantification (\<exists>x. P x) over universal to avoid over-claiming. Example: assumes has `\<forall>x. Expert x --> InPositionToKnow x D`, goal is `InPositionToKnow x D` — the missing link is `Expert x`, so assert `\<exists>x. Expert x` so the witness can instantiate the conditional.
+
+Rules:
+1. Do NOT change the theorem statement (the 'shows' clause)
+2. Do NOT change the existing premise (the 'assumes' clause)
+3. Do NOT change the proof structure (the 'have' clauses)
+4. Do NOT change the consts declarations unless you need to add a new predicate for a new axiom
+5. ONLY modify, add, or remove axioms whose names start with 'generated_premise_'
+6. Use valid Isabelle syntax: \<forall>, \<exists>, \<and>, \<or>, \<not>, -->
+7. Every variable in an axiom MUST be explicitly bound by a quantifier (\<forall> or \<exists>). Never leave variables free. For example, write "\<forall>x d. P x --> Q x d", NOT "P x --> Q x d". This is essential for the axiom to unify with quantified subgoals from the argumentation scheme.
+8. Each axiom should express one clear logical fact
+9. Aim for one axiom per unsolved goal — target each goal directly rather than generating many loosely related axioms. You may add at most {max_new} new axioms beyond the current count
+10. Total generated premise axioms must not exceed {max_total}
+11. Output ONLY the axiom blocks and any new consts, nothing else. Do not include explanations.
+12. NEVER use Isabelle's description operator THE (iota). To refer to a specific action or entity, declare a new const instead. BAD: `(THE a. CarryingOutEuthanasia a)`. GOOD: declare `CarryingOutEuthanasiaAct :: bool` as a constant and assert properties of it directly.
+USER: The following Isabelle theory failed to prove. Refine the generated premise axioms to help the proof succeed.
+
+PREDICATE DEFINITIONS (types and meanings — use these when constructing axioms):
+{predicate_definitions}
+
+Current Isabelle Theory:
+{isabelle_code}
+
+Unsolved Goals from Isabelle:
+{unsolved_goals}
+
+{failed_attempt_info}
+
+Modifiable axiom names (only these may be changed):
+{generated_axiom_names}
+
+Output the refined generated premise axiom blocks below. Include any new consts declarations if you introduce new predicates. Use the exact format:
+consts
+  NewPred :: "type" -- "NewPred(x) means ..."
+
+(* Generated Premise N *)
+axiomatization where
+  generated_premise_N: "formula"
+
+Refined axioms:

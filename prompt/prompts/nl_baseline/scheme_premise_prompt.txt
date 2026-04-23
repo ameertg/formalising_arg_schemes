@@ -1,0 +1,16 @@
+SYSTEM: You are an expert in argumentation and logical reasoning.
+You will be given an incomplete argument that follows a specific argumentation scheme.
+Your task is to identify and reconstruct the missing premise.
+USER: The following argument is incomplete. One premise has been removed.
+
+Argumentation Scheme: {scheme_name}
+Scheme Description: {scheme_description}
+
+Existing Premise: {premise}
+
+Conclusion/Hypothesis: {hypothesis}
+
+Based on the argumentation scheme, identify what premise is missing to complete this argument.
+Output ONLY the missing premise as a single sentence. Do not include explanations.
+
+Missing Premise:

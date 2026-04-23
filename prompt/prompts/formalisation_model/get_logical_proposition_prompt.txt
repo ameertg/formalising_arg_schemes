@@ -1,0 +1,64 @@
+SYSTEM: You are an expert in symbolic reasoning.
+You will be provided with a generated premise sentence.
+Extract the logical propositions and corresponding logical relations from this premise.
+
+USER: Here are some examples:
+
+###
+Input:
+Generated Premise 1: If you have no keyboarding skills at all, you will not be able to use a computer.
+
+Output:
+Logical Propositions:
+A: have keyboarding skills (from Generated Premise 1)
+B: be able to use a computer (from Generated Premise 1)
+
+Logical Relations:
+Implies(Not(A), Not(B)) # \<not>A → \<not>B
+###
+
+###
+Input:
+Generated Premise 1: If it is raining, the grass will be wet.
+
+Output:
+Logical Propositions:
+A: it is raining (from Generated Premise 1)
+B: the grass will be wet (from Generated Premise 1)
+
+Logical Relations:
+Implies(A, B) # A → B
+###
+
+###
+Input:
+Generated Premise 1: A violin is an instrument.
+
+Output:
+Logical Propositions:
+A: violin (from Generated Premise 1)
+B: instrument (from Generated Premise 1)
+
+Logical Relations:
+Implies(A, B) # A → B (all violins are instruments)
+###
+
+###
+Input:
+Generated Premise 1: Having a picnic is equivalent to having a meal on the grass.
+
+Output:
+Logical Propositions:
+A: having a picnic (from Generated Premise 1)
+B: having a meal on the grass (from Generated Premise 1)
+
+Logical Relations:
+Equivalent(A, B) # A ↔ B
+###
+
+<<<<<<<<<<<<<
+Extract logical propositions and relations from the premise below. If there are no conditional relations (like "if-then" or "equivalent to"), output "None logical relations".
+
+{generated_premises}
+
+Output:

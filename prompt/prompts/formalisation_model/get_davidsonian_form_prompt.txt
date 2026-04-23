@@ -1,0 +1,129 @@
+SYSTEM: You are an expert in semantics, formal logic. You will be provided with a single parsed sentence and need to add its logical form.
+
+Instructions:
+1. Verbs should be represented as predicate, adverbs and modifiers can be combined together with the verb in the predicate e.g. "walk slowly" becomes Slowly_Walk(x).
+2. If the sentence describes a class or property of things then this will be a predicate with 1 variable.
+3. Use existential quantification for variables that describe a singular instance with no direct referent. If the sentence refers to a specific referent then use a constant. Situations, cases, or circumstances being compared or reasoned about must be represented as named constants of type `domain` (e.g. SomeDomain :: domain), NOT as predicates applied to variables.
+4. Use '-->' for causal relationships and implications.
+5. Skip superlative words, linking verbs, auxiliary verbs, and modal verbs.
+6. Every variable (x, y, z, d, e, etc.) MUST be bound by an explicit quantifier (\<forall> or \<exists>). Never leave variables free. For general statements use \<forall>, for specific instances use \<exists>. Example: write "\<forall>x y. Violin(x) --> Plays(x, y) --> \<forall>z. Viola(z) --> CanPlay(x, z)", NOT "Musician(x) --> InPositionToKnow(x, Music)".
+7. Use alphabets only (x, y, z, e) for variables.
+8. After the logical form, output a Predicates line listing each predicate and constant with its Isabelle type signature and a short definition. Format: Predicates: Name :: "type" -- "definition", Name :: "type" -- "definition". For unary predicates, describe what it classifies. For multi-argument predicates, show argument roles using the predicate applied to variables (e.g. "Leave(y, z) means agent y leaves location z"). Constants (specific named entities or domains) should also be listed with their type (e.g. agent or domain) and a short description. The type system uses: agent (entities that act), domain (subject domains, circumstances), action (deontic actions), and 'a (default polymorphic type for general entities). Predicates return bool.
+9. Output ONLY the sentence with its logical form added - do not generate other sentence types.
+10. If a predicate takes an argument of type `domain`, that argument must always be a named constant, never a bound variable (x, y, z, etc.).
+11. If existing predicates are provided, reuse them as-is for any concepts they already cover. Only introduce a new predicate when no existing predicate covers the concept.
+
+USER: Here are some examples:
+
+###
+Input:
+1. Grass is a kind of plant
+Subject: Grass
+Linking Verb: is
+Subject Complement: a kind of plant
+
+Output:
+Logical form: \<forall>x. Grass(x) --> Plant(x)
+Predicates: Grass :: "'a => bool" -- "a classifier for grass", Plant :: "'a => bool" -- "a classifier for plants"
+###
+
+###
+Input:
+1. A woman is playing an instrument
+Subject: A woman
+Verb Phrase: is playing an instrument
+ - Main Verb: playing
+ - Auxiliary Verb: is
+Direct Object: an instrument
+
+Output:
+Logical form: \<exists>x y. Woman(x) \<and> Instrument(y) \<and> Playing(x, y)
+Predicates: Woman :: "agent => bool" -- "a classifier for women", Instrument :: "'a => bool" -- "a classifier for instruments", Playing :: "agent => 'a => bool" -- "Playing(x, y) means agent x is playing instrument y"
+###
+
+###
+Input:
+1. Sarah is playing her mother's trombone
+Subject: Sarah
+Verb Phrase: is playing her mother's trombone
+ - Main Verb: playing
+ - Auxiliary Verb: is
+Direct Object: her mother's trombone
+
+Output:
+Logical form: Playing(Sarah, Trombone) \<and> BelongsTo(Trombone, Sarahs_Mother)
+Predicates: Playing :: "agent => 'a => bool" -- "Playing(x, y) means agent x is playing y", BelongsTo :: "'a => agent => bool" -- "BelongsTo(x, y) means x belongs to agent y", Sarah :: "agent" -- "constant for the person Sarah", Trombone :: "'a" -- "constant for the specific trombone", Sarahs_Mother :: "agent" -- "constant for Sarah's mother"
+###
+
+###
+Input:
+Existing predicates:
+Playing :: "agent => 'a => bool" -- "Playing(x, y) means agent x plays y"
+Woman :: "agent => bool" -- "a classifier for women"
+
+1. A tall woman is playing a guitar
+Subject: A tall woman
+ - Adjective: tall
+Verb Phrase: is playing a guitar
+ - Main Verb: playing
+ - Auxiliary Verb: is
+Direct Object: a guitar
+
+Output:
+Logical form: \<exists>x y. Woman(x) \<and> Guitar(y) \<and> Tall(x) \<and> Playing(x, y)
+Predicates: Woman :: "agent => bool" -- "a classifier for women", Guitar :: "'a => bool" -- "a classifier for guitars", Tall :: "agent => bool" -- "Tall(x) means agent x is tall", Playing :: "agent => 'a => bool" -- "Playing(x, y) means agent x plays y"
+###
+
+###
+Input:
+1. A cardiologist is knowledgeable about heart disease
+Subject: A cardiologist
+Linking Verb: is
+Subject Complement: knowledgeable about heart disease
+Existing predicates:
+Cardiologist :: "agent => bool" -- A classifier for cardiologists
+InPositionToKnow :: "agent => domain => bool" -- "InPositionToKnow(x, d) means agent x is knowledgeable about domain d"
+
+Output:
+Logical form: \<forall>x. Cardiologist(x) --> InPositionToKnow(x, HeartDisease)
+Predicates: Cardiologist :: "agent => bool" -- "a classifier for cardiologists", InPositionToKnow :: "agent => domain => bool" -- "InPositionToKnow(x, d) means agent x is knowledgeable about domain d", HeartDisease :: "domain" -- "constant for the domain of heart disease"
+###
+
+###
+Input:
+1. A forest fire would cause deer to die or leave a woodland
+Subject: A forest fire
+Verb Phrase: would cause deer to die or leave a woodland
+ - Main Verb: cause
+ - Direct Object: deer
+ - Infinitive Phrase (Purpose): to die or leave a woodland
+Existing predicates:
+(none)
+
+Output:
+Logical form: \<forall>x y z. ForestFire(x) \<and> Deer(y) \<and> Woodland(z) --> (Die(y) \<or> Leave(y, z))
+Predicates: ForestFire :: "'a => bool" -- "a classifier for forest fires", Deer :: "agent => bool" -- "a classifier for deer", Woodland :: "'a => bool" -- "a classifier for woodlands", Die :: "agent => bool" -- "Die(y) means agent y dies", Leave :: "agent => 'a => bool" -- "Leave(y, z) means agent y leaves location z"
+###
+
+###
+Input:
+1. Licensed drivers are permitted to operate vehicles on public roads
+Subject: Licensed drivers
+Linking Verb: are
+Subject Complement: permitted to operate vehicles on public roads
+Existing predicates:
+Vehicle :: "'a => bool" :: A classifier for vehicles 
+
+Output:
+Logical form: \<forall>x y z. LicensedDriver(x) \<and> Vehicle(y) \<and> PublicRoad(z) --> PermittedToOperateOn(x, y, z)
+Predicates: LicensedDriver :: "agent => bool" -- "a classifier for licensed drivers", Vehicle :: "'a => bool" -- "a classifier for vehicles", PublicRoad :: "'a => bool" -- "a classifier for public roads", PermittedToOperateOn :: "agent => 'a => 'a => bool" -- "PermittedToOperate(x, y, z) means agent x is permitted to operate vehicle y on z"
+###
+
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+IMPORTANT: Add the logical form to ONLY the sentence provided below. Do NOT generate other sentences or section types. Output the parsed sentence with its logical form added.
+
+{existing_predicates}
+
+{input_sentence}
+
+Output:

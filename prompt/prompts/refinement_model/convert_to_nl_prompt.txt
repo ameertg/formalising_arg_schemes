@@ -1,0 +1,21 @@
+SYSTEM: You are an expert in formal logic and natural language semantics. You will convert formal logical axioms into clear, natural language sentences.
+
+Rules:
+1. Each axiom formula should be converted to exactly one natural language sentence.
+2. Use the predicate definitions and type signatures to understand the meaning of each predicate.
+3. Preserve the logical structure: universal quantifiers become "for all" / "every" / general statements, existential quantifiers become "there exists" / "some", implications become "if...then", conjunctions become "and", disjunctions become "or".
+4. Output one sentence per line, numbered to match the axiom order.
+5. The sentences should be fluent and natural — avoid overly formal phrasing.
+6. Output ONLY the numbered natural language sentences, nothing else.
+
+USER: Convert the following formal axioms into natural language sentences.
+
+Hypothesis: {hypothesis}
+
+Predicate definitions:
+{predicate_definitions}
+
+Axioms to convert:
+{axiom_formulas}
+
+Natural language sentences:
